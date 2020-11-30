@@ -1,0 +1,67 @@
+apiVersion: v1
+items:
+- apiVersion: v1
+  kind: PersistentVolume
+  metadata:
+    finalizers:
+    - kubernetes.io/pv-protection
+    name: PROJECT-SERVICE-eap-data-pv 
+  spec: 
+    accessModes:
+    - ReadWriteMany
+    capacity:
+      storage: 1Mi
+    nfs:
+      path: /openshift/PROJECT/SERVICE-eap/data/
+      server: efs.ocp-dev.hanwhalife.com
+    persistentVolumeReclaimPolicy: Retain
+    storageClassName: aws-efs
+- apiVersion: v1
+  kind: PersistentVolume
+  metadata:
+    finalizers:
+    - kubernetes.io/pv-protection
+    name: PROJECT-SERVICE-eap-log-pv
+  spec:
+    accessModes:
+    - ReadWriteMany
+    capacity:
+      storage: 1Mi
+    nfs:
+      path: /openshift/PROJECT/SERVICE-eap/log/
+      server: efs.ocp-dev.hanwhalife.com
+    persistentVolumeReclaimPolicy: Retain
+    storageClassName: aws-efs
+- apiVersion: v1
+  kind: PersistentVolumeClaim
+  metadata:
+    namespace: PROJECT
+    annotations:
+    finalizers:
+    - kubernetes.io/pvc-protection
+    name: PROJECT-SERVICE-eap-data-pvc
+  spec:
+    accessModes:
+    - ReadWriteMany
+    resources:
+      requests:
+        storage: 1Mi
+    volumeName: PROJECT-SERVICE-eap-data-pv
+    storageClassName: aws-efs
+- apiVersion: v1
+  kind: PersistentVolumeClaim
+  metadata:
+    namespace: PROJECT
+    annotations:
+    finalizers:
+    - kubernetes.io/pvc-protection
+    name: PROJECT-SERVICE-eap-log-pvc
+  spec:
+    accessModes:
+    - ReadWriteMany
+    resources:
+      requests:
+        storage: 1Mi
+    volumeName: PROJECT-SERVICE-eap-log-pv
+    storageClassName: aws-efs
+kind: List

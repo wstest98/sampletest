@@ -1,0 +1,180 @@
+apiVersion: template.openshift.io/v1
+kind: Template
+labels:
+  template: PROJECT9-APPLE9-jws
+message: A new application for Redhat JWS 5.0 has been created in your project.
+metadata:
+  annotations:
+    description: hanwhalife OCP JWS-5.0 Template
+    iconClass: icon-rh-tomcat
+    openshift.io/display-name: hlico JWS-5.0 Template
+    openshift.io/provider-display-name: OPENSHIFT
+    tags: tomcat,jws,redhat,PROJECT9-APPLE9-jws
+    version: "1.0"
+  name: PROJECT9-APPLE9-jws
+  namespace: openshift
+objects:
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      description: The web server's http port.
+    labels:
+      application: ${APPLICATION_NAME}
+    name: ${APPLICATION_NAME}
+  spec:
+    ports:
+    - name: 8080-tcp
+      port: 8080
+      targetPort: 8080
+    selector:
+      deploymentConfig: ${APPLICATION_NAME}
+- apiVersion: v1
+  id: ${APPLICATION_NAME}-http
+  kind: Route
+  metadata:
+    annotations:
+      description: Route for application's http service.
+    labels:
+      application: ${APPLICATION_NAME}
+    name: ${APPLICATION_NAME}
+  spec:
+    host: APPLE9.hanwhalife.com
+    path: /
+    port:
+      targetPort: 8080-tcp
+    to:
+      name: ${APPLICATION_NAME}
+- apiVersion: v1
+  kind: ImageStream
+  metadata:
+    labels:
+      application: ${APPLICATION_NAME}
+    name: ${APPLICATION_NAME}
+- apiVersion: v1
+  kind: BuildConfig
+  metadata:
+    labels:
+      application: ${APPLICATION_NAME}
+    name: ${APPLICATION_NAME}
+  spec:
+    output:
+      to:
+        kind: ImageStreamTag
+        name: ${APPLICATION_NAME}:${APP_VERSION}
+    source:
+      git:
+        uri: ${SOURCE_REPOSITORY_URL}
+      type: Git
+    strategy:
+      dockerStrategy:
+        forcePull: true
+        from:
+          kind: ImageStreamTag
+          name: hanwhalife-jws5-openshift:v1.0
+          namespace: openshift
+      type: Docker
+    triggers:
+    - github:
+        secret: ${GITHUB_WEBHOOK_SECRET}
+      type: GitHub
+    - generic:
+        secret: ${GENERIC_WEBHOOK_SECRET}
+      type: Generic
+    - imageChange: {}
+      type: ImageChange
+    - type: ConfigChange
+- apiVersion: v1
+  kind: DeploymentConfig
+  metadata:
+    labels:
+      application: ${APPLICATION_NAME}
+    name: ${APPLICATION_NAME}
+  spec:
+    replicas: 1
+    selector:
+      deploymentConfig: ${APPLICATION_NAME}
+    strategy:
+      type: Rolling
+    template:
+      metadata:
+        labels:
+          application: ${APPLICATION_NAME}
+          deploymentConfig: ${APPLICATION_NAME}
+        name: ${APPLICATION_NAME}
+      spec:
+        containers:
+        - env:
+          image: ${APPLICATION_NAME}
+          imagePullPolicy: Always
+          name: ${APPLICATION_NAME}
+          ports:
+          - containerPort: 8080
+            name: http
+            protocol: TCP
+
+          volumeMounts:
+            - mountPath: /hli_app/log/
+              name: ${APPLICATION_NAME}-log
+            - mountPath: /hli_app/data/
+              name: ${APPLICATION_NAME}-data
+        terminationGracePeriodSeconds: 60
+        volumes:
+          - name: ${APPLICATION_NAME}-log
+            persistentVolumeClaim:
+              claimName: ${APPLICATION_NAME}-log-pvc
+          - name: ${APPLICATION_NAME}-data
+            persistentVolumeClaim:
+              claimName: ${APPLICATION_NAME}-data-pvc
+        terminationGracePeriodSeconds: 60
+    triggers:
+    - imageChangeParams:
+        automatic: true
+        containerNames:
+        - ${APPLICATION_NAME}
+        from:
+          kind: ImageStreamTag
+          name: ${APPLICATION_NAME}:${APP_VERSION}
+      type: ImageChange
+    - type: ConfigChange
+parameters:
+- description: The name for the application.
+  displayName: Application Name
+  name: APPLICATION_NAME
+  required: true
+  value: PROJECT9-APPLE9-jws
+#- description: 'Custom hostname for http service route.  Leave blank for default hostname,
+#    e.g.: <application-name>-<project>.<default-domain-suffix>'
+#  displayName: Custom http Route Hostname
+#  name: HOSTNAME_HTTP
+#  value: standard.hanwhalife.com
+- description: 'App version'
+  displayName: App version
+  name: APP_VERSION
+  required: true
+  value:
+- description: GitHub trigger secret
+  displayName: Github Webhook Secret
+  from: '[a-zA-Z0-9]{8}'
+  generate: expression
+  name: GITHUB_WEBHOOK_SECRET
+  required: true
+- description: Generic build trigger secret
+  displayName: Generic Webhook Secret
+  from: '[a-zA-Z0-9]{8}'
+  generate: expression
+  name: GENERIC_WEBHOOK_SECRET
+  required: true
+- description: 'Git Repository URL'
+  displayName: Git Repository URL
+  name: SOURCE_REPOSITORY_URL
+  required: true
+  value: http://gitlab.ocp-dev.hanwhalife.com:8080/root/template-jws5.git 
+- description: Namespace in which the ImageStreams for Red Hat Middleware images are
+    installed. These ImageStreams are normally installed in the openshift namespace.
+    You should only need to modify this if you've installed the ImageStreams in a
+    different namespace/project.
+  displayName: ImageStream Namespace
+  name: IMAGE_STREAM_NAMESPACE
+  required: true
+  value: openshift
