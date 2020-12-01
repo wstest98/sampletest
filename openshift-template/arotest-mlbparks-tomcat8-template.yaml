@@ -5,9 +5,9 @@ labels:
 message: A new application for Opensource tomcat8  has been created in your project.
 metadata:
   annotations:
-    description: sample OCP tomcat8 Template
+    description: ARO sample tomcat8 Template
     iconClass: icon-rh-tomcat
-    openshift.io/display-name: sample OCP tomcat8 Template
+    openshift.io/display-name: ARO sample tomcat8 Template
     openshift.io/provider-display-name: OPENSHIFT
     tags: tomcat,opensource,arotest-mlbparks-tomcat8
     version: "1.0"
@@ -61,7 +61,7 @@ objects:
     output:
       to:
         kind: ImageStreamTag
-        name: ${APPLICATION_NAME}:1.0
+        name: ${APPLICATION_NAME}:v1
     source:
       git:
         uri: ${SOURCE_REPOSITORY_URL}
@@ -71,7 +71,7 @@ objects:
         forcePull: true
         from:
           kind: ImageStreamTag
-          name: tomcat85:0.1
+          name: tomcat85:v1
           namespace: openshift
       type: Docker
     triggers:
@@ -115,7 +115,7 @@ objects:
           readinessProbe:
             failureThreshold: 3
             httpGet:
-              path: /
+              path: /mlbparks
               port: 8080
               scheme: HTTP
             initialDelaySeconds: 5
@@ -129,7 +129,7 @@ objects:
         - ${APPLICATION_NAME}
         from:
           kind: ImageStreamTag
-          name: ${APPLICATION_NAME}:1.0
+          name: ${APPLICATION_NAME}:v1
       type: ImageChange
     - type: ConfigChange
 parameters:
@@ -142,7 +142,7 @@ parameters:
     e.g.: <application-name>-<project>.<default-domain-suffix>'
   displayName: Custom http Route Hostname
   name: HOSTNAME_HTTP
-  value: arotest-mlbparks.apps.zttsqytl.koreacentral.aroapp.io
+  value: arotest-mlbparks.apps.qc7uo9iz.koreacentral.aroapp.io
 - description: GitHub trigger secret
   displayName: Github Webhook Secret
   from: '[a-zA-Z0-9]{8}'
@@ -159,7 +159,7 @@ parameters:
   displayName: Git Repository URL
   name: SOURCE_REPOSITORY_URL
   required: true
-  value: https://github.com/wstest98/aro_test.git
+  value: https://github.com/wstest98/samletest.git
 - description: Namespace in which the ImageStreams for Red Hat Middleware images are
     installed. These ImageStreams are normally installed in the openshift namespace.
     You should only need to modify this if you've installed the ImageStreams in a
