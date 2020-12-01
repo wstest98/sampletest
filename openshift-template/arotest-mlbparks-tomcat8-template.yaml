@@ -94,8 +94,6 @@ objects:
     replicas: 1
     selector:
       deploymentConfig: ${APPLICATION_NAME}
-    strategy:
-      type: Rolling
     template:
       metadata:
         labels:
@@ -123,6 +121,7 @@ objects:
             successThreshold: 1
             timeoutSeconds: 5
     triggers:
+    - type: ConfigChange
     - imageChangeParams:
         automatic: true
         containerNames:
@@ -131,7 +130,8 @@ objects:
           kind: ImageStreamTag
           name: ${APPLICATION_NAME}:v1
       type: ImageChange
-    - type: ConfigChange
+    strategy:
+      type: Rolling
 parameters:
 - description: The name for the application.
   displayName: Application Name
